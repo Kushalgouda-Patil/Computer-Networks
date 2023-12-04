@@ -52,11 +52,11 @@ int main(void) {
         processID = fork();
 
         if (processID == 0) {
-            Frame frames[20];
+            Frame frames[40];
             int start=0;
             int ack=0;
             Frame tempframe;
-            for(start=0;start<20;)
+            for(start=0;start<40;)
             {
                 n=recv(connectsd,&tempframe,sizeof(tempframe),0);
                 if(n==-1)
@@ -71,7 +71,7 @@ int main(void) {
                     close(connectsd);
                     exit(0);
                 }
-                else if(tempframe.seq_no==start%8)
+                else if(tempframe.seq_no==start%16)
                 {
                     printf("Received frame %d\n",tempframe.seq_no);
                     int rv=readStdinTimeout(5);
@@ -81,7 +81,7 @@ int main(void) {
                         
                         if(ack==0)
                         {
-                            ack=7;
+                            ack=15;
                         }
                         else
                         {

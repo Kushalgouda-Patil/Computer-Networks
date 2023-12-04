@@ -16,7 +16,7 @@ void printFrame(Frame frames[],int fsize)
 }
 void sendframes(int sd,Frame frames[])
 {
-    while(end-start<5)
+    while(end-start<10)
     {
         send(sd,&frames[end],sizeof(frames[end]),0);
         printf("Sent frame %d\n",frames[end].seq_no);
@@ -54,11 +54,11 @@ int main(void) {
         close(sd);
         exit(EXIT_FAILURE);
     }
-    Frame frames[20];
+    Frame frames[40];
     FILE *fp;
     fp=fopen("input.txt","r");
     int seq_no=0;
-    for(int i=0;i<20;i++)
+    for(int i=0;i<40;i++)
     {
         frames[i].seq_no=seq_no;
         frames[i].isAcked=false;
@@ -66,15 +66,15 @@ int main(void) {
         {
             frames[i].data[0]='\0';
         }
-        seq_no=(seq_no+1)%8;
+        seq_no=(seq_no+1)%16;
 
     }
-    printFrame(frames,20);
+    printFrame(frames,40);
     int ack;
     struct pollfd fds[1];
     fds[0].fd = sd;
     fds[0].events = POLLIN;
-    while(end<20)
+    while(end<40)
     {
         sendframes(sd,frames);
         int pollRes=poll(fds, 1, 5000);
