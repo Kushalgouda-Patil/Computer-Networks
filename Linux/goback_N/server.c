@@ -1,6 +1,6 @@
 
 #include "headerFiles.h"
-#define BUFFER_SIZE 5
+
 typedef struct{
     int seq_no;
     char data[5];
@@ -8,9 +8,7 @@ typedef struct{
 }Frame;
 int main(void) {
 
-    int listensd, connectsd, n, bytesToRecv, processID;
-    char buffer[256];
-    char* movePtr;
+    int listensd, connectsd, n, processID;
     struct sockaddr_in serverAddress, clientAddress;
     socklen_t clAddrLen;  // Use socklen_t for accept() parameter
 

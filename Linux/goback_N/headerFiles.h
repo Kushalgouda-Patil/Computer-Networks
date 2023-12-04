@@ -33,16 +33,6 @@ int readStdinTimeout(int sec)
     rv = select(fileno(stdin) + 1, &set, NULL, NULL, &timeout);
     return rv;
 }
-int printwindow(char **window,int window_size)
-{
-    for(int i=0;i<window_size;i++)
-    {
-        if(window[i]!=NULL)
-        {
-            printf("%s\n",window[i]);
-        }
-    }
-    return 0;
-}
+
 
 #endif

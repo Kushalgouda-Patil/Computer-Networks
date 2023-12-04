@@ -32,10 +32,7 @@ void resendframes(int sd,Frame frames[])
     }
 }
 int main(void) {
-    int sd, n, bytesToRecv;
-    char sendBuffer[BUFFER_SIZE], recvBuffer[BUFFER_SIZE];
-    int recvBufferInt;
-    char* movePtr;
+    int sd, n;
     struct sockaddr_in serverAddress;
 
     sd = socket(AF_INET, SOCK_STREAM, 0);
@@ -95,7 +92,7 @@ int main(void) {
         else
         {
             recv(sd,&ack,sizeof(ack),0);
-            printf("Received ack %d\n",ack);
+            printf("Received ack for %d\n",ack);
             if(ack==frames[start].seq_no)
             {
                 frames[start].isAcked=true;
