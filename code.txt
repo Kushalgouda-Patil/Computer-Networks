@@ -1,0 +1,162 @@
+//server
+#include <iostream>
+#include <winsock2.h>
+#include <ctime>
+
+using namespace std;
+
+#pragma comment (lib, "ws2_32.lib")
+
+int main() {
+    WSADATA wsa;
+    SOCKET s, new_socket;
+    struct sockaddr_in server, client;
+    int c;
+    int frames_received = 0; // Counter to keep track of received frames
+    int timeout_sec = 10; // Timeout in seconds
+    
+    if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) {
+        cout << "Failed. Error Code: " << WSAGetLastError() << endl;
+        return 1;
+    }
+
+    if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+        cout << "Could not create socket: " << WSAGetLastError() << endl;
+        return 1;
+    }
+
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_port = htons(8888);
+
+    if (bind(s, (struct sockaddr *)&server, sizeof(server)) == SOCKET_ERROR) {
+        cout << "Bind failed with error code: " << WSAGetLastError() << endl;
+        return 1;
+    }
+
+    listen(s, 3);
+
+    cout << "Waiting for incoming connections..." << endl;
+
+    c = sizeof(struct sockaddr_in);
+    new_socket = accept(s, (struct sockaddr *)&client, &c);
+
+    if (new_socket == INVALID_SOCKET) {
+        cout << "accept failed with error code: " << WSAGetLastError() << endl;
+        return 1;
+    }
+
+    cout << "Connection accepted" << endl;
+
+    srand(time(NULL));
+
+    // Set receive timeout option on the socket
+    int timeout = timeout_sec * 1000; // Timeout in milliseconds
+    setsockopt(new_socket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout, sizeof(timeout));
+
+    while (true) { // Keep running until the client signals the end of transmission
+        int frame;
+        int recv_size = recv(new_socket, (char *)&frame, sizeof(frame), 0);
+        if (recv_size > 0) {
+            if (frame == -1) {
+                cout << "End of transmission signal received. Exiting..." << endl;
+                break;
+            }
+            cout << "Received Frame: " << frame << endl;
+            frames_received++; // Increment counter for received frames
+            
+            // Randomly decide whether to drop acknowledgment
+            if (rand() % 10 < 1) { // Drop with 10% probability
+                cout << "Acknowledgment for Frame " << frame << " dropped!" << endl;
+            } else {
+                send(new_socket, (char *)&frame, sizeof(frame), 0); // Send acknowledgment
+            }
+        }
+        else {
+            // If receive timeout occurs, retransmit the last acknowledgment
+            cout << "Receive timeout occurred. Retransmitting last acknowledgment..." << endl;
+            int ack = frames_received - 1; // The frame for which acknowledgment was missed
+            send(new_socket, (char *)&ack, sizeof(ack), 0); // Retransmit acknowledgment
+        }
+    }
+
+    cout << "Connection closed" << endl;
+
+    closesocket(s);
+    closesocket(new_socket);
+    WSACleanup();
+    return 0;
+}
+
+
+
+#include <iostream>
+#include <winsock2.h>
+#include <ctime>
+
+#define ll long long int
+using namespace std;
+
+#pragma comment (lib, "ws2_32.lib")
+
+int main() {
+    WSADATA wsa;
+    SOCKET s;
+    struct sockaddr_in server;
+    ll tf, N, tt = 0;
+    srand(time(NULL));
+
+    cout << "Enter the Total number of frames: ";
+    cin >> tf;
+    cout << "Enter the Window Size: ";
+    cin >> N;
+
+    if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) {
+        cout << "Failed. Error Code: " << WSAGetLastError() << endl;
+        return 1;
+    }
+
+    if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+        cout << "Could not create socket: " << WSAGetLastError() << endl;
+        return 1;
+    }
+
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_family = AF_INET;
+    server.sin_port = htons(8888);
+
+    if (connect(s, (struct sockaddr *)&server, sizeof(server)) < 0) {
+        cout << "Connection failed" << endl;
+        return 1;
+    }
+
+    ll i = 1;
+    while (i <= tf) {
+        int z = 0;
+        for (int k = i; k < i + N && k <= tf; k++) {
+            cout << "Sending Frame " << k << "..." << endl;
+            send(s , (char *) &k , sizeof(k) , 0);
+            tt++;
+        }
+        for (int k = i; k < i + N && k <= tf; k++) {
+            int ack;
+            recv(s, (char *)&ack, sizeof(ack), 0);
+            if (ack == k) {
+                cout << "Acknowledgment for Frame " << k << "..." << endl;
+                z++;
+            } else {
+                cout << "Timeout!! Frame Number : " << k << " Not Received" << endl;
+                cout << "Retransmitting Window..." << endl;
+                break;
+            }
+        }
+        cout << endl;
+        i = i + z;
+    }
+
+    cout << "Total number of frames which were sent and resent: " << tt << endl;
+
+    closesocket(s);
+    WSACleanup();
+    return 0;
+}
